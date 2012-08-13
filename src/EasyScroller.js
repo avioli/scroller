@@ -49,21 +49,30 @@ EasyScroller.prototype.render = (function() {
 	var perspectiveProperty = vendorPrefix + "Perspective";
 	var transformProperty = vendorPrefix + "Transform";
 
+	var theEvent = document.createEvent('HTMLEvents');
+	theEvent.initEvent('scrollTick', true, true);
+
 	if (helperElem.style[perspectiveProperty] !== undef) {
 
 		return function(left, top, zoom) {
+			this.content.dispatchEvent(theEvent);
+
 			this.content.style[transformProperty] = 'translate3d(' + (-left) + 'px,' + (-top) + 'px,0) scale(' + zoom + ')';
 		};
 
 	} else if (helperElem.style[transformProperty] !== undef) {
 
 		return function(left, top, zoom) {
+			this.content.dispatchEvent(theEvent);
+
 			this.content.style[transformProperty] = 'translate(' + (-left) + 'px,' + (-top) + 'px) scale(' + zoom + ')';
 		};
 
 	} else {
 
 		return function(left, top, zoom) {
+			this.content.dispatchEvent(theEvent);
+
 			this.content.style.marginLeft = left ? (-left/zoom) + 'px' : '';
 			this.content.style.marginTop = top ? (-top/zoom) + 'px' : '';
 			this.content.style.zoom = zoom || '';
@@ -85,7 +94,7 @@ EasyScroller.prototype.reflow = function() {
 
 EasyScroller.prototype.bindEvents = function() {
 
-	var that = this, target, endScroll, moved, active;
+	var that = this, moved;
 
 	// reflow handling
 	window.addEventListener("resize", function() {
@@ -94,6 +103,8 @@ EasyScroller.prototype.bindEvents = function() {
 
 	// touch devices bind touch events
 	if ('ontouchstart' in window) {
+
+		var endScroll, active, target;
 
 		startScroll = function(e) {
 			// Don't react if initial down happens on a form element
@@ -182,6 +193,7 @@ EasyScroller.prototype.bindEvents = function() {
 				pageY: e.pageY
 			}], e.timeStamp);
 
+			moved = false;
 			mousedown = true;
 			e.preventDefault();
 
@@ -198,6 +210,7 @@ EasyScroller.prototype.bindEvents = function() {
 				pageY: e.pageY
 			}], e.timeStamp);
 
+			moved = true;
 			mousedown = true;
 
 		}, false);
@@ -211,6 +224,11 @@ EasyScroller.prototype.bindEvents = function() {
 			that.scroller.doTouchEnd(e.timeStamp);
 
 			mousedown = false;
+
+			if (moved)
+				e.preventDefault();
+
+			moved = false;
 
 		}, false);
 
