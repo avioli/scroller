@@ -49,29 +49,38 @@ EasyScroller.prototype.render = (function() {
 	var perspectiveProperty = vendorPrefix + "Perspective";
 	var transformProperty = vendorPrefix + "Transform";
 
-	var theEvent = document.createEvent('HTMLEvents');
-	theEvent.initEvent('scrollTick', true, true);
+	var dispatchScrollTick = function(content) {
+		var scrollTickEvent = document.createEvent('UIEvents');
+		scrollTickEvent.initEvent('scrollTick', true, true);
+		content.dispatchEvent(scrollTickEvent);
+	}
 
 	if (helperElem.style[perspectiveProperty] !== undef) {
 
+		EasyScroller.renderMode = 'translate3d';
+
 		return function(left, top, zoom) {
-			this.content.dispatchEvent(theEvent);
+			dispatchScrollTick(this.content);
 
 			this.content.style[transformProperty] = 'translate3d(' + (-left) + 'px,' + (-top) + 'px,0) scale(' + zoom + ')';
 		};
 
 	} else if (helperElem.style[transformProperty] !== undef) {
 
+		EasyScroller.renderMode = 'translate';
+
 		return function(left, top, zoom) {
-			this.content.dispatchEvent(theEvent);
+			dispatchScrollTick(this.content);
 
 			this.content.style[transformProperty] = 'translate(' + (-left) + 'px,' + (-top) + 'px) scale(' + zoom + ')';
 		};
 
 	} else {
 
+		EasyScroller.renderMode = 'margins';
+
 		return function(left, top, zoom) {
-			this.content.dispatchEvent(theEvent);
+			dispatchScrollTick(this.content);
 
 			this.content.style.marginLeft = left ? (-left/zoom) + 'px' : '';
 			this.content.style.marginTop = top ? (-top/zoom) + 'px' : '';
